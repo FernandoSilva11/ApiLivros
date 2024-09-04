@@ -5,7 +5,11 @@ const bookRoutes = require('./routes/bookRoutes');
 const app = express();
 
 // Conectar ao MongoDB
-connectDB();
+require('dotenv').config();
+
+// Conecte ao MongoDB usando a URI do arquivo .env
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
 
 // Middleware para JSON
 app.use(express.json());
