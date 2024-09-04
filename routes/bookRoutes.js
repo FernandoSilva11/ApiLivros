@@ -12,6 +12,12 @@ router.post('/books', async (req, res) => {
             return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
         }
 
+        const duplicado = await Book.findOne({title: title})
+
+        if(duplicado) {
+            return res.status(409).json({erro: 'o título do livro já foi cadastrado.'});
+        }
+
         const newBook = new Book({ title, author, publisher, year, pages });
         await newBook.save();
         res.status(201).json(newBook);
@@ -44,6 +50,36 @@ router.get('/books/:id', async (req, res) => {
         res.status(500).json({ message: 'Erro ao consultar o livro', error: err.message });
     }
 });
+
+// Rota para atualizar um livro pelo ID
+router.put('/books/:id', async (req, res) => {
+    try {
+        const { title, author, publisher, year, pages } = req.body;
+
+        // Validação de dados
+        if (!title || !author || !publisher || !year || !pages) {
+            return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
+}
+        // Encontrar e atualizar o livro no banco de dados
+        const updatedBook = await Book.findByIdAndUpdate(
+            req.params.id, // ID do livro a ser atualizado
+            { title, author, publisher, year, pages }, // Novos valores
+            { new: true, runValidators: true } // Opções: new retorna o documento atualizado, runValidators aplica as validações do schema
+        );
+
+        // Se o livro não for encontrado, retorna um erro 404
+        if (!updatedBook) {
+            return res.status(404).json({ message: 'Livro não encontrado' });
+        }
+
+        // Retorna o livro atualizado
+        res.json(updatedBook);
+    } catch (error) {
+        // Trata erros (como formato inválido do ID ou outros problemas de validação)
+        res.status(500).json({ message: 'Erro ao atualizar livro', error: error.message });
+    }
+});
+
 
 // Remoção de livro
 router.delete('/books/:id', async (req, res) => {
